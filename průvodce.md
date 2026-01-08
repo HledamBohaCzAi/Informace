@@ -14,3 +14,4 @@ Hledamboha.cz nabízí vyškoleného online průvodce. Křesťanského dobrovoln
 - Online průvodce je člověk, který pomůže ujít kus Vaší cesty.
 - Průvodce neříká, co máte dělat, ale objevuje spolu s Vámi odpovědi na Vaše otázky.
 - Průvodce je proškolený v online koučinku a svůj čas nabízí jako dobrovolník.
+- Průvodce odpovídá pohlavím a věkovou skupinou doprovázenému.
