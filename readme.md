@@ -19,6 +19,13 @@ V levo nahoře je přepínač. Teď je vypráno `Preview` na čtení lidmi, kdy�
 
 ## Úpravy v Gitu
 
+### Než začneš s úpravami
+Přihlaš se do githubu. Klidně můžeš použít svůj email na hledamboha.cz a přihlášení přes google.
+Až se tvůj účet vytvoří, napiš mi (david4@hledamboha.cz), nebo někomu, kdo už přístup má a my ti dáme přístup.
+
+Pokud chceš někomu dát přístup, tak v nastavení.
+![img.png](obrazky_pro_readme/img_9.png)
+
 ### malilinkaté změny
 Pro malilinkaté změny stačí, když
 1. V pravo nahoře kliknete na ikonu s tužkou. ![img_2.png](obrazky_pro_readme/img_2.png).
