@@ -635,7 +635,7 @@
     /* Mobile responsiveness */
     @media (max-width: 480px) {
       .chat-widget-button {
-        bottom: 1.5rem;
+        bottom: 5.5rem;
         right: 1.5rem;
         width: 56px;
         height: 56px;
@@ -647,20 +647,22 @@
       }
 
       .chat-widget-window {
-        left: 1rem;
-        right: 1rem;
-        bottom: 6rem;
-        width: auto;
-        max-height: calc(100vh - 8rem);
-        max-width: calc(100vw - 2rem);
-        border-radius: 12px;
+        left: 0;
+        right: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        max-height: 100vh;
+        max-width: 100vw;
+        border-radius: 0;
       }
 
       .chat-widget-window.chat-size-small,
       .chat-widget-window.chat-size-medium,
       .chat-widget-window.chat-size-large {
-        width: auto;
-        height: auto;
+        width: 100%;
+        height: 100%;
       }
 
       .chat-widget-header {
