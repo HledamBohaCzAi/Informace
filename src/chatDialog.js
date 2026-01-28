@@ -1,4 +1,4 @@
-(function() {
+(function () {
     'use strict';
 
     async function loadFromGithub(filePath) {
@@ -31,15 +31,19 @@
     const EMAILJS_SERVICE_ID = "service_flsh7wj";
     const EMAILJS_TEMPLATE_ID = "template_fk2dlen";
 
+    const SESSION_HISTORY_KEY = 'chat_history_session';
+    const LOCAL_HISTORY_KEY = 'chat_history_local';
+
     function generateCorrelationId() {
         // Simple RFC4122-ish v4 generator
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
             const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 0xf) >> 0;
             const v = c === 'x' ? r : (r & 0x3) | 0x8;
             return v.toString(16);
         });
     }
-    const CORRELATION_ID = generateCorrelationId();
+
+    let correlationId = generateCorrelationId();
 
     // Initialize EmailJS if available
     try {
@@ -94,17 +98,17 @@
                 console.error('Failed to load from GitHub after retries:', file, err);
             }
         }
-        return { prompt: parts.join('\n'), allSucceeded };
+        return {prompt: parts.join('\n'), allSucceeded};
     }
 
     // Kick off background loading of system prompt right away
     (async function initSystemPrompt() {
         try {
-            const { prompt, allSucceeded } = await buildSystemPromptFromGithub();
+            const {prompt, allSucceeded} = await buildSystemPromptFromGithub();
             systemPrompt = prompt;
             // ensure the first message is the system message
             if (messages.length === 0 || messages[0].role !== 'system') {
-                messages.unshift({ role: 'system', content: systemPrompt });
+                messages.unshift({role: 'system', content: systemPrompt});
             } else {
                 messages[0].content = systemPrompt;
             }
@@ -155,6 +159,20 @@
     }
     .chat-size-btn:hover {
       background: rgba(255,255,255,0.4);
+    }
+    .chat-new-btn {
+      background: rgba(255,255,255,0.9);
+      color: #333;
+      border: none;
+      font-size: 12px;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 2px 8px;
+      margin-left: 8px;
+    }
+    .chat-new-btn:hover {
+      background: #fff;
     }
 
     .chat-widget-button {
@@ -423,7 +441,7 @@
     container.innerHTML = `
     <button class="chat-widget-button" id="chatWidgetButton" style="display: none;">
       <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c-1.1 0-2-.9-2-2zm0 14H6l-2 2V4h16v12z"/>
       </svg>
     </button>
 
@@ -434,6 +452,7 @@
         <button class="chat-size-btn" data-size="small">S</button>
         <button class="chat-size-btn" data-size="medium">M</button>
         <button class="chat-size-btn" data-size="large">L</button>
+        <button class="chat-new-btn" id="chatNewConversationBtn" style="display:none;">Nová konverzace</button>
       </div>
       <button class="chat-widget-close" id="chatWidgetClose">&times;</button>
     </div>
@@ -470,9 +489,24 @@
         const input = document.getElementById('chatWidgetInput');
         const sendBtn = document.getElementById('chatWidgetSend');
         const sizeButtons = container.querySelectorAll('.chat-size-btn');
+        const newBtn = document.getElementById('chatNewConversationBtn');
 
         // Disable send until system prompt is ready
         sendBtn.disabled = !isSystemReady;
+
+        // Restore chat history from localStorage if available
+        const storedHistory = loadChatHistoryFromLocal();
+        if (storedHistory && storedHistory.length > 0) {
+            messages = [
+                { role: 'system', content: systemPrompt },
+                ...storedHistory
+            ];
+        }
+
+        // Wire new conversation button
+        if (newBtn) {
+            newBtn.addEventListener('click', startNewConversation);
+        }
 
         // Functions
         function toggleWindow() {
@@ -490,6 +524,7 @@
         }
 
         function renderMessages() {
+            updateNewConversationVisibility();
             messagesContainer.innerHTML = '';
             messages.forEach(msg => {
                 const msgDiv = document.createElement('div');
@@ -544,6 +579,62 @@
             }
         }
 
+        // Chat history persistence helpers
+        function getStorableHistory() {
+            // Store only user and assistant messages, exclude the system prompt
+            return messages.filter(m => m.role === 'user' || m.role === 'assistant');
+        }
+
+        function saveChatHistory() {
+            try {
+                const history = getStorableHistory();
+                const serialized = JSON.stringify(history);
+                try { sessionStorage.setItem(SESSION_HISTORY_KEY, serialized); } catch (_) {}
+                try { localStorage.setItem(LOCAL_HISTORY_KEY, serialized); } catch (_) {}
+            } catch (e) {
+                console.warn('Failed to save chat history:', e);
+            }
+        }
+
+        function loadChatHistoryFromLocal() {
+            try {
+                const raw = localStorage.getItem(LOCAL_HISTORY_KEY);
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!Array.isArray(parsed)) return null;
+                // Keep only valid roles
+                return parsed.filter(m => m && (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string');
+            } catch (e) {
+                console.warn('Failed to load chat history:', e);
+                return null;
+            }
+        }
+
+        function clearChatHistory() {
+            try { sessionStorage.removeItem(SESSION_HISTORY_KEY); } catch (_) {}
+            try { localStorage.removeItem(LOCAL_HISTORY_KEY); } catch (_) {}
+        }
+
+        function hasHistory() {
+            return getStorableHistory().length > 0 || !!localStorage.getItem(LOCAL_HISTORY_KEY);
+        }
+
+        function updateNewConversationVisibility() {
+            if (!newBtn) return;
+            newBtn.style.display = hasHistory() ? 'inline-block' : 'none';
+        }
+
+        function startNewConversation() {
+            clearChatHistory();
+            correlationId = generateCorrelationId();
+            // Reset messages to system + greeting only
+            messages = [
+                { role: 'system', content: systemPrompt },
+                { role: 'assistant', content: GREETING }
+            ];
+            renderMessages();
+        }
+
         async function sendTranscriptEmail() {
             // Retry sending the transcript email with exponential backoff
             try {
@@ -552,12 +643,12 @@
                 }
 
                 const transcript = formatTranscript(messages);
-                const subject = `Konverzace s AI ${CORRELATION_ID}`;
+                const subject = `Konverzace s AI ${correlationId}`;
                 const params = {
                     to_email: EMAIL_TO,
                     subject: subject,
                     message: transcript,
-                    correlation_id: CORRELATION_ID
+                    correlation_id: correlationId
                 };
 
                 const maxAttempts = 5; // total tries
@@ -629,8 +720,12 @@
                     ? data.choices[0].message.content
                     : (data && data.content ? data.content : 'Omlouváme se, nepodařilo se přečíst odpověď od OpenAI.');
                 messages.push({role: 'assistant', content: assistantContent});
-                                // send transcript via EmailJS (non-blocking)
-                                try { sendTranscriptEmail(); } catch (e) { console.warn('Email send invocation failed:', e); }
+                // send transcript via EmailJS (non-blocking)
+                try {
+                    sendTranscriptEmail();
+                } catch (e) {
+                    console.warn('Email send invocation failed:', e);
+                }
             } catch (error) {
                 console.error('Error:', error);
                 messages.push({
@@ -640,6 +735,8 @@
             } finally {
                 isLoading = false;
                 sendBtn.disabled = false;
+                // Persist chat history after receiving a response (or error), excluding system message
+                saveChatHistory();
                 renderMessages();
             }
         }
@@ -679,4 +776,3 @@
     }
 
 })();
-
