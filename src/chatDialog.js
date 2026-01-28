@@ -284,7 +284,6 @@
       display: flex;
       gap: 6px;
       border-radius: 6px;
-      margin-right: auto
     }
 
     .chat-size-btn {
@@ -322,6 +321,7 @@
       font-family: 'Albert Sans', sans-serif;
       display: flex;
       align-items: center;
+      margin-left: auto;
       gap: 4px;
     }
 
