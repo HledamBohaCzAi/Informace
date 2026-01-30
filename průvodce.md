@@ -1,5 +1,5 @@
 ## Průvodce
-Hledamboha.cz nabízí vyškoleného online průvodce. Křesťanského dobrovolníka, který uživatele rád provede jeho aktuální životní situací na cestě k Bohu a bude mu naslouchat.
+Hledamboha.cz nabízí vyškoleného online průvodce. Křesťanského dobrovolníka, který uživatele rád provede jeho aktuální životní situací na cestě k Bohu a bude mu naslouchat nebo se může za něj modlit. 
 ### Osobní online průvodce
 - **URL:** https://hledamboha.cz/projekt/osobni-online-pruvodce
 
