@@ -1,7 +1,7 @@
 ## OMG Talk Show
 
 ### Co je OMG talk show?
-O hledání smyslu života, radosti i pochybnostech: Známé osobnosti v OMG talk show hovoří o tom, jak víra vstupuje do jejich osobního i pracovního světa. Seriál vznikl ve spolupráci s projektem HledamBoha.cz, jako moderátorka jím provází Ellen Makumbirofa, úspěšná autorka žánru slam poetry, vyznáním evangelikální křesťanka.
+Donebevolající talk show o víře i o životě s top československými osobnostmi. O hledání smyslu života, radosti i pochybnostech: Známé osobnosti v OMG talk show hovoří o tom, jak víra vstupuje do jejich osobního i pracovního světa. Seriál vznikl ve spolupráci s projektem HledamBoha.cz, jako moderátorka jím provází Ellen Makumbirofa, úspěšná autorka žánru slam poetry, vyznáním evangelikální křesťanka.
 
 ### Epizody
 
