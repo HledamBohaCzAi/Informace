@@ -2,13 +2,7 @@
 ## Bible
 
 ### Bible zdarma
-- **URL:** https://hledamboha.cz/projekt/bible-zdarma
-
-#### O projektu
-- Napište si o Nový zákon v jednoduchém a čtivém překladu a my Vám ho zdarma pošleme prostřednictvím Zásilkovny na Vaši adresu.
-- Zásilky odesíláme obvykle 1x týdně.
-- Poslední objednávky před Vánoci přijímáme do 17. 12. 2025.
+- pokud máte zájem o Nový zákon zdarma, napište na info@hledamboha.cz
 
 #### Podpora distribuce
-- Díky našim podporovatelům jsou Nové zákony zdarma, včetně poštovného.
-- Pokud chcete přispět, můžete tak učinit online platbou skrze sbírku na Darujme.cz.
+- Knihu Nového zákona Vám pošleme zdarma, ale prosíme o příspěvěk na poštovné, který činí 100 Kč.
