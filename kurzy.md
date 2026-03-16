@@ -62,6 +62,23 @@
 
 ---
 
+### Když se dobrým lidem dějí špatné věci
+- **URL:** https://hledamboha.cz/course/kdyz-se-dobrym-lidem-deji-spatne-veci
+
+#### Kapitola
+- Otázka, kterou si klade každý
+- Nejste na to sami
+- Příběh Karla, Dorky, Martina, Terky, Markéty
+- Nesmyslnost bolí
+- Bůh a otázky
+- Proč někdy slova nepomohou
+- Ježíš na kříži – Bůh, který trpí
+- Naděje, kterou přináší vzkříšení Ježíše
+- Než přijde odpověď
+- My můžeme být součástí odpovědi
+
+---
+
 ### Jak se vypořádat se strachem a úzkostí
 - **URL:** https://hledamboha.cz/course/jak-se-vyporadat-se-strachem
 
@@ -77,9 +94,10 @@
 
 #### Kapitola
 - Pravidla diskuze
-- 1. setkání – 4. díl: Skála, na které se bude stavět
-- 2. setkání – 5. díl: Svatební dar
-- 3. setkání – 6. díl: Bezmezný soucit
+- 1. setkání
+- 2. setkání
+- 3. setkání
+- 4. setkání
 - Závěr
 
 ---
@@ -195,15 +213,23 @@
 
 ---
 
-### Živá Bible
-- **URL:** https://hledamboha.cz/course/ziva-bible
+### The Chosen 2. série
+- **URL:** https://hledamboha.cz/course/the-chosen-2-serie
 
-#### Kapitola
-- Prostor pro seznámení
-- Pravidla diskuze
-- Setkání
-- Co Vám kurz přinesl?
-- Ohodnoťte kurz
+#### Díl 1 | Hrom
+- Shrnutí dílu
+- Seriál vs. kniha
+- Slovníček pojmů
+- Diskuzní okénko
+
+#### Díl 2 | Viděl jsem tě
+#### Díl 3 | Matouš 4:24
+#### Díl 4 | Perfektní příležitost
+#### Díl 5 | Duch
+#### Díl 6 | Protiprávní
+#### Díl 7 | Zúčtování
+#### Díl 8 | Za horami
+
 
 ---
 
