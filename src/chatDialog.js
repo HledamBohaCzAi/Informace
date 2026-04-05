@@ -164,6 +164,18 @@
       z-index: 9998;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       animation: pulse 2s ease-in-out infinite;
+      /* sliding offset for hidden state */
+      --slide-x: 0%;
+      transform: translateX(var(--slide-x));
+      /* enable dragging on mobile without scrolling the page */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Hidden state: move half off-screen to the right */
+    .chat-widget-button.hidden {
+      --slide-x: calc(50% + 2rem);
     }
 
     @keyframes pulse {
@@ -176,13 +188,13 @@
     }
 
     .chat-widget-button:hover {
-      transform: scale(1.08);
+      transform: translateX(var(--slide-x)) scale(1.08);
       box-shadow: 0 6px 30px rgba(222, 183, 91, 0.5);
       animation: none;
     }
 
     .chat-widget-button:active {
-      transform: scale(0.95);
+      transform: translateX(var(--slide-x)) scale(0.95);
     }
 
     .chat-widget-button svg {
@@ -767,6 +779,11 @@
         const sizeButtons = container.querySelectorAll('.chat-size-btn');
         const newBtn = document.getElementById('chatNewConversationBtn');
 
+        // Scroll/hover state for chat button visibility
+        let lastScrollY = window.scrollY || window.pageYOffset || 0;
+        let isPinnedShown = false; // set to true on hover; cleared on next downward scroll
+        const SCROLL_THRESHOLD = 10;
+
         // Disable send until system prompt is ready
         sendBtn.disabled = !isSystemReady;
 
@@ -1018,7 +1035,16 @@
         }
 
         // Event listeners
-        button.addEventListener('click', toggleWindow);
+        function onButtonClick(e) {
+            if (button.__suppressNextClick) {
+                e.preventDefault();
+                e.stopPropagation();
+                button.__suppressNextClick = false;
+                return;
+            }
+            toggleWindow();
+        }
+        button.addEventListener('click', onButtonClick);
         closeBtn.addEventListener('click', toggleWindow);
         sendBtn.addEventListener('click', sendMessage);
         input.addEventListener('input', autoResize);
@@ -1028,6 +1054,123 @@
                 sendMessage();
             }
         });
+
+        // Drag logic: allow vertical dragging on right side (desktop + mobile)
+        (function enableVerticalDrag(btn){
+            const DRAG_STORAGE_KEY = 'chatWidgetButtonTopPx';
+            const SAFE_MARGIN = 12; // px
+            const CLICK_SUPPRESS_DISTANCE = 6; // px
+            let dragging = false;
+            let startPointerY = 0;
+            let startTop = 0;
+            let moved = false;
+
+            function clampTop(top) {
+                const h = window.innerHeight || document.documentElement.clientHeight;
+                const btnH = btn.offsetHeight || 64;
+                const maxTop = Math.max(SAFE_MARGIN, h - btnH - SAFE_MARGIN);
+                return Math.min(Math.max(top, SAFE_MARGIN), maxTop);
+            }
+
+            function applyTop(top) {
+                const t = clampTop(top);
+                btn.style.top = t + 'px';
+                btn.style.bottom = '';
+                return t;
+            }
+
+            // Restore stored top position if available
+            try {
+                const stored = localStorage.getItem(DRAG_STORAGE_KEY);
+                if (stored !== null && !isNaN(parseFloat(stored))) {
+                    applyTop(parseFloat(stored));
+                }
+            } catch(_) {}
+
+            function onPointerDown(e){
+                // Only primary button / touch
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                dragging = true;
+                moved = false;
+                startPointerY = e.clientY;
+                // compute current top; if not set, convert from bottom to top
+                const rect = btn.getBoundingClientRect();
+                startTop = rect.top;
+                // Make sure it's positioned by top so movement works consistently
+                applyTop(startTop);
+                // Visual: pause transitions/animations during drag for snappy feel
+                btn.classList.remove('hidden');
+                btn.style.transition = 'none';
+                btn.style.animation = 'none';
+                try { btn.setPointerCapture(e.pointerId); } catch(_) {}
+                e.preventDefault();
+            }
+
+            function onPointerMove(e){
+                if (!dragging) return;
+                const dy = e.clientY - startPointerY;
+                if (Math.abs(dy) > CLICK_SUPPRESS_DISTANCE) {
+                    moved = true;
+                }
+                applyTop(startTop + dy);
+                e.preventDefault();
+            }
+
+            function endDrag(e){
+                if (!dragging) return;
+                dragging = false;
+                // restore transition
+                btn.style.transition = '';
+                btn.style.animation = '';
+                // Persist position
+                const rect = btn.getBoundingClientRect();
+                const finalTop = clampTop(rect.top);
+                try { localStorage.setItem(DRAG_STORAGE_KEY, String(finalTop)); } catch(_) {}
+                if (moved) {
+                    btn.__suppressNextClick = true;
+                }
+                e && e.preventDefault && e.preventDefault();
+            }
+
+            btn.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointermove', onPointerMove, {passive:false});
+            window.addEventListener('pointerup', endDrag, {passive:false});
+            window.addEventListener('pointercancel', endDrag, {passive:false});
+
+            // Re-clamp on resize
+            window.addEventListener('resize', () => {
+                const styleTop = parseFloat((btn.style.top || '').replace('px',''));
+                if (!isNaN(styleTop)) {
+                    applyTop(styleTop);
+                }
+            });
+        })(button);
+
+        // Show on hover and pin until next scroll down
+        button.addEventListener('mouseenter', () => {
+            isPinnedShown = true;
+            button.classList.remove('hidden');
+        });
+
+        // Hide/show on scroll based on direction
+        window.addEventListener('scroll', () => {
+            const currentY = window.scrollY || window.pageYOffset || 0;
+            const delta = currentY - lastScrollY;
+
+            if (Math.abs(delta) >= SCROLL_THRESHOLD) {
+                if (delta > 0) {
+                    // scrolling down
+                    if (isPinnedShown) {
+                        isPinnedShown = false; // unpin on first scroll down
+                    }
+                    button.classList.add('hidden');
+                } else {
+                    // scrolling up
+                    button.classList.remove('hidden');
+                }
+                lastScrollY = currentY;
+            }
+        }, { passive: true });
 
         // Re-render, enable send, and show the chat button when system prompt gets ready
         document.addEventListener('chatWidget:systemReady', () => {
