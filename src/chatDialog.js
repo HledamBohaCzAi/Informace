@@ -167,6 +167,10 @@
       /* sliding offset for hidden state */
       --slide-x: 0%;
       transform: translateX(var(--slide-x));
+      /* enable dragging on mobile without scrolling the page */
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
     }
 
     /* Hidden state: move half off-screen to the right */
@@ -1031,7 +1035,16 @@
         }
 
         // Event listeners
-        button.addEventListener('click', toggleWindow);
+        function onButtonClick(e) {
+            if (button.__suppressNextClick) {
+                e.preventDefault();
+                e.stopPropagation();
+                button.__suppressNextClick = false;
+                return;
+            }
+            toggleWindow();
+        }
+        button.addEventListener('click', onButtonClick);
         closeBtn.addEventListener('click', toggleWindow);
         sendBtn.addEventListener('click', sendMessage);
         input.addEventListener('input', autoResize);
@@ -1041,6 +1054,97 @@
                 sendMessage();
             }
         });
+
+        // Drag logic: allow vertical dragging on right side (desktop + mobile)
+        (function enableVerticalDrag(btn){
+            const DRAG_STORAGE_KEY = 'chatWidgetButtonTopPx';
+            const SAFE_MARGIN = 12; // px
+            const CLICK_SUPPRESS_DISTANCE = 6; // px
+            let dragging = false;
+            let startPointerY = 0;
+            let startTop = 0;
+            let moved = false;
+
+            function clampTop(top) {
+                const h = window.innerHeight || document.documentElement.clientHeight;
+                const btnH = btn.offsetHeight || 64;
+                const maxTop = Math.max(SAFE_MARGIN, h - btnH - SAFE_MARGIN);
+                return Math.min(Math.max(top, SAFE_MARGIN), maxTop);
+            }
+
+            function applyTop(top) {
+                const t = clampTop(top);
+                btn.style.top = t + 'px';
+                btn.style.bottom = '';
+                return t;
+            }
+
+            // Restore stored top position if available
+            try {
+                const stored = localStorage.getItem(DRAG_STORAGE_KEY);
+                if (stored !== null && !isNaN(parseFloat(stored))) {
+                    applyTop(parseFloat(stored));
+                }
+            } catch(_) {}
+
+            function onPointerDown(e){
+                // Only primary button / touch
+                if (e.pointerType === 'mouse' && e.button !== 0) return;
+                dragging = true;
+                moved = false;
+                startPointerY = e.clientY;
+                // compute current top; if not set, convert from bottom to top
+                const rect = btn.getBoundingClientRect();
+                startTop = rect.top;
+                // Make sure it's positioned by top so movement works consistently
+                applyTop(startTop);
+                // Visual: pause transitions/animations during drag for snappy feel
+                btn.classList.remove('hidden');
+                btn.style.transition = 'none';
+                btn.style.animation = 'none';
+                try { btn.setPointerCapture(e.pointerId); } catch(_) {}
+                e.preventDefault();
+            }
+
+            function onPointerMove(e){
+                if (!dragging) return;
+                const dy = e.clientY - startPointerY;
+                if (Math.abs(dy) > CLICK_SUPPRESS_DISTANCE) {
+                    moved = true;
+                }
+                applyTop(startTop + dy);
+                e.preventDefault();
+            }
+
+            function endDrag(e){
+                if (!dragging) return;
+                dragging = false;
+                // restore transition
+                btn.style.transition = '';
+                btn.style.animation = '';
+                // Persist position
+                const rect = btn.getBoundingClientRect();
+                const finalTop = clampTop(rect.top);
+                try { localStorage.setItem(DRAG_STORAGE_KEY, String(finalTop)); } catch(_) {}
+                if (moved) {
+                    btn.__suppressNextClick = true;
+                }
+                e && e.preventDefault && e.preventDefault();
+            }
+
+            btn.addEventListener('pointerdown', onPointerDown);
+            window.addEventListener('pointermove', onPointerMove, {passive:false});
+            window.addEventListener('pointerup', endDrag, {passive:false});
+            window.addEventListener('pointercancel', endDrag, {passive:false});
+
+            // Re-clamp on resize
+            window.addEventListener('resize', () => {
+                const styleTop = parseFloat((btn.style.top || '').replace('px',''));
+                if (!isNaN(styleTop)) {
+                    applyTop(styleTop);
+                }
+            });
+        })(button);
 
         // Show on hover and pin until next scroll down
         button.addEventListener('mouseenter', () => {
