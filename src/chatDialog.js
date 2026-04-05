@@ -164,6 +164,14 @@
       z-index: 9998;
       transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       animation: pulse 2s ease-in-out infinite;
+      /* sliding offset for hidden state */
+      --slide-x: 0%;
+      transform: translateX(var(--slide-x));
+    }
+
+    /* Hidden state: move half off-screen to the right */
+    .chat-widget-button.hidden {
+      --slide-x: calc(50% + 2rem);
     }
 
     @keyframes pulse {
@@ -176,13 +184,13 @@
     }
 
     .chat-widget-button:hover {
-      transform: scale(1.08);
+      transform: translateX(var(--slide-x)) scale(1.08);
       box-shadow: 0 6px 30px rgba(222, 183, 91, 0.5);
       animation: none;
     }
 
     .chat-widget-button:active {
-      transform: scale(0.95);
+      transform: translateX(var(--slide-x)) scale(0.95);
     }
 
     .chat-widget-button svg {
@@ -767,6 +775,11 @@
         const sizeButtons = container.querySelectorAll('.chat-size-btn');
         const newBtn = document.getElementById('chatNewConversationBtn');
 
+        // Scroll/hover state for chat button visibility
+        let lastScrollY = window.scrollY || window.pageYOffset || 0;
+        let isPinnedShown = false; // set to true on hover; cleared on next downward scroll
+        const SCROLL_THRESHOLD = 10;
+
         // Disable send until system prompt is ready
         sendBtn.disabled = !isSystemReady;
 
@@ -1028,6 +1041,32 @@
                 sendMessage();
             }
         });
+
+        // Show on hover and pin until next scroll down
+        button.addEventListener('mouseenter', () => {
+            isPinnedShown = true;
+            button.classList.remove('hidden');
+        });
+
+        // Hide/show on scroll based on direction
+        window.addEventListener('scroll', () => {
+            const currentY = window.scrollY || window.pageYOffset || 0;
+            const delta = currentY - lastScrollY;
+
+            if (Math.abs(delta) >= SCROLL_THRESHOLD) {
+                if (delta > 0) {
+                    // scrolling down
+                    if (isPinnedShown) {
+                        isPinnedShown = false; // unpin on first scroll down
+                    }
+                    button.classList.add('hidden');
+                } else {
+                    // scrolling up
+                    button.classList.remove('hidden');
+                }
+                lastScrollY = currentY;
+            }
+        }, { passive: true });
 
         // Re-render, enable send, and show the chat button when system prompt gets ready
         document.addEventListener('chatWidget:systemReady', () => {
